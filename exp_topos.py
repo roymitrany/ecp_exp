@@ -85,8 +85,8 @@ class IntroTopo(Topo):
         s1 = self.addSwitch('s1')
         my_host = self.addHost('myhost',ip="10.69.0.100/24")
         close_dst = self.addHost('dst1',ip="10.69.0.1/24")
-	far_dst = self.addHost('dst2',ip="10.69.0.2/24")
-	lossy_dst = self.addHost('dst3',ip="10.69.0.3/24")
+        far_dst = self.addHost('dst2',ip="10.69.0.2/24")
+        lossy_dst = self.addHost('dst3',ip="10.69.0.3/24")
 
         self.addLink(s1, my_host, cls=TCLink)
         self.addLink(s1, close_dst, cls=TCLink, bw=1, delay='2ms')
