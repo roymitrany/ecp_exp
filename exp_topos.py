@@ -11,7 +11,28 @@ topology enables one to pass in '--topo=mytopo' from the command line.
 """
 from mininet.link import TCLink
 from mininet.topo import Topo
+from mininet.node import Node
+import random
 
+class PingerNode(Node):
+    "A Node with IP forwarding enabled."
+    def config(self, **params):
+        super(PingerNode, self).config(**params)
+        
+	self.cmd('python3 random_pinger.py 10.69.0 1 20&')
+
+    def terminate(self):
+        super(PingerNode, self).terminate()
+
+class ArpTopo(Topo):
+    def build(self, **_opts):
+        s1 = self.addSwitch('s1')
+        my_host = self.addHost('myhost',ip="10.69.0.100/24")
+        self.addLink(s1, my_host, cls=TCLink)
+
+        for i in range(1,21):
+            dst = self.addHost('dst%d'%i,cls=PingerNode,ip="10.69.0.%d/24"%i)
+            self.addLink(s1, dst, cls=TCLink)
 
 class ExpTopo(Topo):
     def __init__(self):
@@ -45,4 +66,4 @@ class IntroTopo(Topo):
         self.addLink(s1, lossy_dst,cls=TCLink, bw=1, loss=50)
 
 
-topos = { 'expTopo':ExpTopo, 'introTopo':IntroTopo }
+topos = { 'expTopo':ExpTopo, 'introTopo':IntroTopo, 'arpTopo':ArpTopo }
