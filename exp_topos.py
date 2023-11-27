@@ -170,5 +170,51 @@ class TcpTopo(Topo):
         self.addLink(s1, close_responder, cls=TCLink)
         self.addLink(s2, remote_responder, cls=TCLink)
 
+class TraceRouteTopo(Topo):
+    "Topology for meeting 2 TCP protocol analysis"
+    router_list = []
+    def build(self, **_opts):
+        # Define Routers
+        #router_list[i] = self.addHost('rtr%d'%i, ip="10.69.%d.1/24", mac="00:00:00:00:00:%d%d"%(i,i), cls=LinuxRouter,
+        #                       defaultRoute='via 10.69.0.2')  # Between networks 0 and 1
+        router1 = self.addHost('rtr1', ip="10.69.0.1/24", mac="00:00:00:00:00:11", cls=LinuxRouter,
+                               defaultRoute='via 10.69.1.2')  # Between networks 0 and 1
+        router2 = self.addHost('rtr2', ip="10.69.1.2/24", mac="00:00:00:00:00:22", cls=LinuxRouter,
+                               defaultRoute='via 10.69.2.2')  # Between networks 0 and 2
+        router3 = self.addHost('rtr3', ip="10.69.2.3/24", mac="00:00:00:00:00:33", cls=LinuxRouter,
+                               defaultRoute='via 10.69.2.2')  # Between networks 0 and 2
 
-topos = {'introTopo': IntroTopo, 'arpTopo': ArpTopo, 'redirectTopo': RedirectTopo, 'tcpTopo': TcpTopo}
+        # Define hosts with addresses and default routes
+        my_host = self.addHost('myhost', ip="10.69.0.100/24",
+                               defaultRoute='via 10.69.0.1')
+
+
+        responder = self.addHost('responder2', ip="10.69.2.100/24",
+                                  defaultRoute='via 10.69.2.2')
+
+        # Switches for networks 0,1,2
+        s0 = self.addSwitch('s0')
+        s1 = self.addSwitch('s1')
+        s2 = self.addSwitch('s2')
+        s3 = self.addSwitch('s3')
+
+        # Network 0
+        self.addLink(s0, my_host, cls=TCLink)
+        self.addLink(s0, router1, cls=TCLink)
+
+        # Network 1
+        self.addLink(s1, router1, cls=TCLink, intfName2='r01-eth2',
+                     params2={'ip': '10.69.1.1/24'}, delay='250ms')
+        self.addLink(s1, router2, cls=TCLink)
+        #router2.setHostRoute('10.69.0.0/24', '10.69.1.1')
+
+        # Network 2
+        self.addLink(s2, router2, cls=TCLink, intfName2='r02-eth2',
+                     params2={'ip': '10.69.2.2/24'}, delay='125ms')
+
+        # links between switches to hosts
+        self.addLink(s2, responder, cls=TCLink)
+
+
+topos = {'introTopo': IntroTopo, 'arpTopo': ArpTopo, 'redirectTopo': RedirectTopo, 'tcpTopo': TcpTopo,
+         'traceRouteTopo':TraceRouteTopo}
