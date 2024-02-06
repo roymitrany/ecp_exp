@@ -34,29 +34,29 @@ class LinuxRouter(Node):
         super(LinuxRouter, self).terminate()
 
 
-# This type of host runs nuttcp server
+# This type of host runs iperf3 server
 
-class NuttcpResponder(Node):
-    "A Node listening as NUTTCP server (port 5000)."
+class IperfResponder(Node):
+    "A Node listening as iperf3 server."
 
     def config(self, **params):
-        super(NuttcpResponder, self).config(**params)
+        super(IperfResponder, self).config(**params)
 
         self.cmd('sysctl net.ipv4.tcp_rmem="400000 400000 400000"')  # Avoid RWin scale (confuses Wireshark)
         self.cmd('sysctl net.ipv4.neigh.{}-eth0.gc_stale_time=720000'.format(self.name))
-        self.cmd('arp -s 10.60.0.100 00:00:00:00:01:00')  # Static arp cache from responder to sender
+        self.cmd('ip neighbor add 10.60.0.100 lladdr 00:00:00:00:01:00 nud permanent')  # Static arp cache from responder to sender
         self.cmd('ethtool -K {}-eth0 tso off'.format(self.name))  # Disable GSO/TSO
         self.cmd('ethtool -K {}-eth0 gso off'.format(self.name))
-        self.cmd('nuttcp -S')
+        self.cmd('iperf3 -s&')
 
     def set_sack(self, sack_val):
         self.cmd('sysctl net.ipv4.tcp_sack={}'.format(sack_val))
 
 
-class NuttcpClient(Node):
+class IperfClient(Node):
 
     def config(self, **params):
-        super(NuttcpClient, self).config(**params)
+        super(IperfClient, self).config(**params)
 
         self.cmd('sysctl net.ipv4.neigh.{}-eth0.gc_stale_time=720000'.format(self.name))  # Extend ARP cache expiration
         self.cmd('ethtool -K {}-eth0 tso off'.format(self.name))  # Disable GSO/TSO
@@ -161,9 +161,9 @@ class TcpTopo(Topo):
         s1 = self.addSwitch('s1')
         s2 = self.addSwitch('s2')
         my_host = self.addHost('myhost', ip="10.69.0.100/24", mac="00:00:00:00:01:00",
-                               cls=NuttcpClient)
-        close_responder = self.addHost('resp1', ip="10.69.0.1/24", cls=NuttcpResponder)
-        remote_responder = self.addHost('resp2', ip="10.69.0.2/24", cls=NuttcpResponder)
+                               cls=IperfClient)
+        close_responder = self.addHost('resp1', ip="10.69.0.1/24", cls=IperfResponder)
+        remote_responder = self.addHost('resp2', ip="10.69.0.2/24", cls=IperfResponder)
 
         self.addLink(s1, s2, cls=TCLink, bw=0.5, delay=delay, max_queue_size=qSize, use_tbf=True)
         self.addLink(s1, my_host, cls=TCLink)
