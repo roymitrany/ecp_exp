@@ -76,8 +76,8 @@ net['rtr1'].cmd('ip route add 192.168.1.0/24 via 10.69.0.100')
 net['nat'].cmd('ip route add default via 10.69.0.1')
 
 # In the responder, start a simple HTTP server
-net['responder1'].cmd('python -m http.server 80&')
+net['responder1'].cmd('python3 -m http.server 80&')
 # Set the NAT not to send RST
-#net['nat'].cmd('iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
+net['nat'].cmd('iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
 CLI( net )
 net.stop()
