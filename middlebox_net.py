@@ -80,9 +80,6 @@ net['middlebox'].cmd('ip route add default via 10.69.0.1')
 net['middlebox'].cmd('iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
 
 # Start a simple HTTP server in all hostsmid    
-net['private1'].cmd('python3 -m http.server 80&')
-net['private2'].cmd('python3 -m http.server 80&')
-net['private3'].cmd('python3 -m http.server 80&')
 net['public1'].cmd('python3 -m http.server 80&')
 CLI(net)
 net.stop()
